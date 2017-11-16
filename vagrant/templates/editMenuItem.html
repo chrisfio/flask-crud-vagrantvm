@@ -1,0 +1,32 @@
+<html>
+<head></head>
+
+<body>
+	<h1>Edit menu item for {{restaurant.name}}</h1>
+
+	<div>
+		<p>
+			<form>
+				Dish Name:<br>
+				<input type="text" name="#" value="{{item.name}}"><br><br>
+				Type:<br>
+				<select name="type">
+					<option value="{{item.name}}">{{item.course}}</option>
+					<option value="appetizer">Appetizer</option>
+					<option value="entree">Entree</option>
+					<option value="desert">Desert</option>
+					<option value="drink">Drink</option>
+				</select><br><br>
+				Description:<br>
+				<input type="text" name="#" value="{{item.description}}"><br><br>
+				Price:<br>
+				<input type="text" name="#" value="{{item.price}}"><br><br>
+				<a href="#"><input type="submit" value="Submit"></a>
+				<a href="#"><input type="submit" value="Cancel"></a>
+			</form>
+
+			<br><br>
+		</p>
+		
+</body>
+</html>

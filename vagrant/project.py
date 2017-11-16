@@ -12,7 +12,7 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 
-@app.route('/restaurants/<int:restaurant_id>/menu/JSON')
+@app.route('/restaurant/<int:restaurant_id>/menu/JSON')
 def restaurantMenuJSON(restaurant_id):
     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).first()
     items = session.query(MenuItem).filter_by(
@@ -21,14 +21,14 @@ def restaurantMenuJSON(restaurant_id):
 
 
 # ADD JSON ENDPOINT HERE
-@app.route('/restaurants/<int:restaurant_id>/menu/JSON')
+@app.route('/restaurant/<int:restaurant_id>/menu/JSON')
 def menuItemJSON(restaurant_id, menu_id):
     menuItem = session.query(MenuItem).filter_by(id=menu_id).first()
     return jsonify(MenuItem=menuItem.serialize)
 
 
 @app.route('/')
-@app.route('/restaurants/<int:restaurant_id>/menu')
+@app.route('/restaurant/<int:restaurant_id>/menu')
 def restaurantMenu(restaurant_id):
     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).first()
     items = session.query(MenuItem).filter_by(restaurant_id=restaurant_id)
@@ -36,7 +36,7 @@ def restaurantMenu(restaurant_id):
         'menu.html', restaurant=restaurant, items=items, restaurant_id=restaurant_id)
 
 
-@app.route('/restaurants/<int:restaurant_id>/new', methods=['GET', 'POST'])
+@app.route('/restaurant/<int:restaurant_id>/new', methods=['GET', 'POST'])
 def newMenuItem(restaurant_id):
 
     if request.method == 'POST':
@@ -49,7 +49,7 @@ def newMenuItem(restaurant_id):
         return render_template('newmenuitem.html', restaurant_id=restaurant_id)
 
 
-@app.route('/restaurants/<int:restaurant_id>/<int:menu_id>/edit',
+@app.route('/restaurant/<int:restaurant_id>/<int:menu_id>/edit',
            methods=['GET', 'POST'])
 def editMenuItem(restaurant_id, menu_id):
     editedItem = session.query(MenuItem).filter_by(id=menu_id).first()

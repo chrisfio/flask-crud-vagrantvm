@@ -1,0 +1,25 @@
+<html>
+<head></head>
+
+<body>
+	<h1>Restaurants</h1>
+
+	{% if not restaurants %}
+		<p>There are not restaurants in our database</p>
+
+	{% else %}
+	{% for restaurant in restaurants %}
+
+	<div>
+		<p>
+			{{restaurant.name}}
+			<br>
+			<a href="#">Edit</a>
+			<br>
+			<a href="#">Delete</a>
+			<br><br>
+		</p>
+	{% endfor %}
+	{% endif %}
+</body>
+</html>
