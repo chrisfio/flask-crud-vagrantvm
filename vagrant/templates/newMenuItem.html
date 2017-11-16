@@ -6,22 +6,23 @@
 
 	<div>
 		<p>
-			<form>
+			<form action="{{ url_for('newMenuItem',restaurant_id=restaurant.id)}}" method ='post'>
 				Dish Name:<br>
-				<input type="text" name="#" value="Enter dish name"><br><br>
+				<input type="text" name="item-name" value="Enter dish name"><br><br>
 				Type:<br>
-				<select name="type">
-				  <option value="appetizer">Appetizer</option>
-				  <option value="entree">Entree</option>
-				  <option value="desert">Desert</option>
-				  <option value="drink">Drink</option>
-				</select><br><br>
 				Description:<br>
-				<input type="text" name="#" value="{{item.description}}"><br><br>
+				<input type="text" name="item-description" value="Dish description"><br><br>
 				Price:<br>
-				<input type="text" name="#" value="$x.xx"><br><br>
-				<a href="#"><input type="submit" value="Submit"></a>
-				<a href="#"><input type="submit" value="Cancel"></a>
+				<input type="text" name="item-price" value="$x.xx"><br><br>
+				<div>
+					<input type="radio" name="item-course" value="Appetizer" checked>Appetizer<br> 
+					<input type="radio" name="item-course" value="Entree">Entree<br>
+					<input type="radio" name="item-course" value="Desert">Desert<br>
+					<input type="radio" name="item-course" value="Drink">Drink<br>
+				</div>
+
+				<input type="submit" value="Submit">
+				<a href="{{url_for('showMenu', restaurant_id=restaurant_id )}}">Cancel</a>
 			</form>
 
 			<br><br>

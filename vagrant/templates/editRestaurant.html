@@ -1,4 +1,5 @@
 <html>
+
 <head></head>
 
 <body>
@@ -6,11 +7,12 @@
 	
 	<div>
 		<p>
-			<form>
-				<input type="text" name="#" value="{{restaurant.name}}">
-				<a href="#"><input type="submit" value="Update"></a>
-				<a href="#"><input type="submit" value="Cancel"></a>
+			<form action="{{ url_for('editRestaurant',restaurant_id=restaurant.id)}}" method='post'>
+				<input type="text" name='update-restaurantname' placeholder="{{restaurant.name}}">
+				<input type="submit" value="Update">
+				<a href="{{url_for('showRestaurants')}}">Cancel</a>
 			</form>
 		</p>
 </body>
 </html>
+

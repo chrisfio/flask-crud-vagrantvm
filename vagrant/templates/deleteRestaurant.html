@@ -6,9 +6,9 @@
 	
 	<div>
 		<p>
-			<form>
-				<a href="#"><input type="submit" value="Delete"></a>
-				<a href="#"><input type="submit" value="Cancel"></a>
+			<form action="{{ url_for('deleteRestaurant', restaurant_id=restaurant.id)}}" method='post'>
+				<input type="submit" value="Delete">
+				<a href="{{url_for('showRestaurants')}}">Cancel</a>
 			</form>
 		</p>
 </body>

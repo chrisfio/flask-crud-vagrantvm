@@ -2,15 +2,15 @@
 <head></head>
 
 <body>
-	<h1></h1>
+	<h1>Add a new restaurant below!</h1>
 
 	<div>
 		<p>
-			<form>
-				<input type="text" name="#" value="Enter Restaurant Name Here">
-				<a href="#"><input type="submit" value="Add"></a>
-				<a href="#"><input type="submit" value="Cancel"></a>
+			<form action"#" method="post">
+				<input type="text" name="restaurantname" size="30" value="Name">
+				<input type="submit" value="Add">
 			</form>
+			<a href="{{url_for('showRestaurants')}}">Cancel></a>
 		</p>
 </body>
 </html>

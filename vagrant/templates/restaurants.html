@@ -4,6 +4,8 @@
 <body>
 	<h1>Restaurants</h1>
 
+	<a href="{{url_for('newRestaurant')}}" > <h3> Add a New Restaurant </h3> </a>
+
 	{% if not restaurants %}
 		<p>There are not restaurants in our database</p>
 
@@ -14,9 +16,9 @@
 		<p>
 			{{restaurant.name}}
 			<br>
-			<a href="#">Edit</a>
+			<a href="{{url_for('editRestaurant',restaurant_id = restaurant.id)}}">Edit</a>
 			<br>
-			<a href="#">Delete</a>
+			<a href="{{url_for('deleteRestaurant',restaurant_id = restaurant.id)}}">Delete</a>
 			<br><br>
 		</p>
 	{% endfor %}
