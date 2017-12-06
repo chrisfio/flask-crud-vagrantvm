@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+	<body>
+		<div class="container">
+			<h1>{{ spirit.name }}</h1>
+			<div class="col-md-3">
+				<h2>Cocktails</h2>
+					{% for recipe in recipes %}
+						<div class="recipe">
+							<h3>{{recipe.name}}</h3>
+							<p>{{recipe.description}}</p>
+						</div>			
+				{% endfor %}
+			</div>
+		</div>
+	</body>
+</html>
