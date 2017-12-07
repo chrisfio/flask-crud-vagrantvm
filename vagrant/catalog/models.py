@@ -10,6 +10,10 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String(32), index=True)
     password_hash = Column(String(64))
+# Might not need the three below
+    name = Column(String(250), nullable=False)
+    email = Column(String(250), nullable=False)
+    picture = Column(String(250))
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
