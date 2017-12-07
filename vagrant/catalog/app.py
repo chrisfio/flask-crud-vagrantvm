@@ -2,13 +2,17 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from flask import Flask, render_template, request, redirect, jsonify, url_for, flash, make_response
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
-from models import Base, Spirit, Recipe 
+from models import Base, Spirit, Recipe, User 
 from flask import session as login_session
 import random, string, httplib2, json, requests, cgi
 from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
 
 
 app = Flask(__name__)
+
+CLIENT_ID = json.loads(
+    open('client_secrets.json', 'r').read())['web']['client_id']
+APPLICATION_NAME = "Bartender at Home Application"
 
 # Connect to Database and create database session
 engine = create_engine('sqlite:///drinkcatalog.db')
@@ -40,7 +44,7 @@ def gconnect():
 
     try:
         # Upgrade the authorization code into a credentials object
-        oauth_flow = flow_from_clientsecrets('client_secrets_google.json', scope='')
+        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
