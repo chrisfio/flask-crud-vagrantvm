@@ -1,18 +1,12 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-import cgi
-from flask import Flask, render_template, request, redirect, jsonify, url_for, flash
+from flask import Flask, render_template, request, redirect, jsonify, url_for, flash, make_response
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
 from models import Base, Spirit, Recipe 
 from flask import session as login_session
-import random
-import string
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.client import FlowExchangeError
-import httplib2
-import json
-from flask import make_response
-import requests
+import random, string, httplib2, json, requests, cgi
+from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
+
 
 app = Flask(__name__)
 
@@ -97,7 +91,7 @@ def showRecipes(spirit_id):
 #    if 'username' not in login_session or creator.id != login_session['user_id']:
  #       return render_template('TBDpublicmenu.html', recipes=recipes, spirit=spirit, creator=creator)
  #   else:
-    return render_template('recipes.html', recipes=recipes, spirit=spirit) #, creator=creator)
+    return render_template('recipeList.html', recipes=recipes, spirit=spirit) #, creator=creator)
 
 # Create a new recipe
 @app.route('/spirit/<int:spirit_id>/cocktails/new/', methods=['GET', 'POST'])
@@ -109,14 +103,70 @@ def newRecipe(spirit_id):
 #    if login_session['user_id'] != restaurant.user_id:
 #        return "<script>function myFunction() {alert('You are not authorized to add menu items to this restaurant. Please create your own restaurant in order to add items.');}</script><body onload='myFunction()'>"
     if request.method == 'POST':
-        newRecipe = Recipe(name=request.form['name'], description=request.form['description'], ingredients=request.form[
-        	'ingredients'], instructions=request.form['instructions'], spirit_id=spirit_id) #, user_id=spirit.user_id)
+        newRecipe = Recipe(
+        	name=request.form['name'], 
+        	description=request.form['description'], 
+        	ingredients=request.form['ingredients'], 
+        	instructions=request.form['instructions'], 
+        	spirit_id=spirit_id) 
+        	#, user_id=spirit.user_id)
         session.add(newRecipe)
         session.commit()
         flash('New Menu %s Item Successfully Created' % (newRecipe.name))
         return redirect(url_for('showRecipes', spirit_id=spirit_id))
     else:
         return render_template('newRecipe.html', spirit=spirit)
+
+
+# Edit a recipe
+@app.route('/spirit/<int:spirit_id>/cocktail/<int:recipe_id>/edit', methods=['GET', 'POST'])
+@app.route('/spirit/<int:spirit_id>/cocktails/<int:recipe_id>/edit', methods=['GET', 'POST'])
+@app.route('/spirits/<int:spirit_id>/cocktail/<int:recipe_id>/edit', methods=['GET', 'POST'])
+@app.route('/spirits/<int:spirit_id>/cocktails/<int:recipe_id>/edit', methods=['GET', 'POST'])
+def editRecipe(spirit_id, recipe_id):
+#    if 'username' not in login_session:
+ #       return redirect('/login')
+    editedRecipe = session.query(Recipe).filter_by(id=recipe_id).one()
+    spirit = session.query(Spirit).filter_by(id=spirit_id).one()
+#    if login_session['user_id'] != restaurant.user_id:
+#        return "<script>function myFunction() {alert('You are not authorized to edit menu items to this restaurant. Please create your own restaurant in order to edit items.');}</script><body onload='myFunction()'>"
+    if request.method == 'POST':
+        if request.form['name']:
+            editedRecipe.name = request.form['name']
+        if request.form['description']:
+            editedRecipe.description = request.form['description']
+        if request.form['ingredients']:
+            editedRecipe.ingredients = request.form['ingredients']
+        if request.form['instructions']:
+            editedRecipe.instructions = request.form['instructions']
+        session.add(editedRecipe)
+        session.commit()
+        flash('Recipe Successfully Edited')
+        return redirect(url_for('showRecipes', spirit_id=spirit_id))
+    else:
+        return render_template('editRecipe.html', spirit_id=spirit_id, recipe_id=recipe_id, recipe=editedRecipe)
+
+
+# Edit a recipe
+@app.route('/spirit/<int:spirit_id>/cocktail/<int:recipe_id>/delete', methods=['GET', 'POST'])
+@app.route('/spirit/<int:spirit_id>/cocktails/<int:recipe_id>/delete', methods=['GET', 'POST'])
+@app.route('/spirits/<int:spirit_id>/cocktail/<int:recipe_id>/delete', methods=['GET', 'POST'])
+@app.route('/spirits/<int:spirit_id>/cocktails/<int:recipe_id>/delete', methods=['GET', 'POST'])
+def deleteRecipe(spirit_id, recipe_id):
+#    if 'username' not in login_session:
+ #       return redirect('/login')
+    deleteRecipe = session.query(Recipe).filter_by(id=recipe_id).one()
+    spirit = session.query(Spirit).filter_by(id=spirit_id).one()
+#    if login_session['user_id'] != restaurant.user_id:
+#        return "<script>function myFunction() {alert('You are not authorized to edit menu items to this restaurant. Please create your own restaurant in order to edit items.');}</script><body onload='myFunction()'>"
+    if request.method == 'POST':
+        session.delete(deleteRecipe)
+        session.commit()
+        flash('%s Recipe Successfully Deleted' % deleteRecipe.name)
+        return redirect(url_for('showRecipes', spirit_id=spirit_id))
+    else:
+        return render_template('deleteRecipe.html', spirit_id=spirit_id, recipe_id=recipe_id, recipe=deleteRecipe)
+
 
 
 if __name__ == '__main__':

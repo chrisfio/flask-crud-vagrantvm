@@ -17,11 +17,13 @@
 				</div>
 
 				{% for spirit in spirits %}
-				<a href = "{{url_for('editSpirit', spirit_id = spirit.id)}}">
+				<a href = "{{url_for('showRecipes', spirit_id = spirit.id)}}">
 					<div class="row">
 						<div class="col-md-1"></div>
 							<div class="col-md-10 spirit-list">
 								<h3>{{spirit.name}}</h3>
+								<a href="{{url_for('editSpirit', spirit_id = spirit.id)}}">Edit</a>
+								<a href="{{url_for('deleteSpirit', spirit_id = spirit.id)}}">Delete</a>
 							</div>
 						<div class="col-md-1"></div>
 					</div>

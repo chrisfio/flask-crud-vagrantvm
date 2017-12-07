@@ -13,8 +13,11 @@
 							<p>{{recipe.description}}</p>
 							<p>{{recipe.ingredients}}</p>
 							<p>{{recipe.instructions}}</p>
+							<a href="{{ url_for('editRecipe', spirit_id=spirit.id, recipe_id=recipe.id)}}">Edit</a>
+							<a href="{{ url_for('deleteRecipe', spirit_id=spirit.id, recipe_id=recipe.id)}}">Delete</a>
 						</div>			
 				{% endfor %}
+				<a href="{{ url_for('newRecipe', spirit_id=spirit.id)}}">Add new recipe</a>
 			</div>
 		</div>
 	</body>
