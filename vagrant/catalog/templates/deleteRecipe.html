@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-	</head>
-	<body>
-		<div class="container">
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+<div class="main-section">
 			<h1>Delete recipe for {{recipe.name}}</h1>
 				<form action="{{ url_for('deleteRecipe', spirit_id=spirit_id, recipe_id=recipe_id)}}" method = "post">
 					<div class="recipe">
@@ -20,7 +18,5 @@
 		<span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel</button>
 		</a>
 		</div>
-		</a>
-	</body>
-</html>
-
+{% include "footer.html" %}
+{% endblock %}
