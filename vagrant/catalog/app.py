@@ -305,6 +305,7 @@ def showSpirits():
 def newSpirit():
     if 'username' not in login_session:
         return redirect('/login')
+    spirits = session.query(Spirit).order_by(asc(Spirit.name))
     if request.method == 'POST':
         newSpirit = Spirit(
             name= request.form['name'], 
@@ -313,9 +314,9 @@ def newSpirit():
         session.add(newSpirit)
         flash('New Spirit %s Successfully Added' % newSpirit.name)
         session.commit()
-        return redirect(url_for('showSpirits'))
+        return redirect(url_for('showSpirits', spirits=spirits))
     else:
-        return render_template('newSpirit.html')
+        return render_template('newSpirit.html', spirits=spirits)
 
 # Edit a spirit
 @app.route('/spirit/<int:spirit_id>/edit/', methods=['GET', 'POST'])
@@ -323,25 +324,35 @@ def newSpirit():
 def editSpirit(spirit_id):
     editedSpirit = session.query(
         Spirit).filter_by(id=spirit_id).one()
+    spirits = session.query(Spirit).order_by(asc(Spirit.name))
+    creator = getUserInfo(editedSpirit.user_id)
+    recipes = session.query(Recipe).filter_by(
+        spirit_id=spirit_id).all()
     if 'username' not in login_session:
         return redirect('/login')
     if editedSpirit.user_id != login_session['user_id']:
         return "<script>function myFunction() {alert('You are not authorized to edit this spirit. Please create your own spirit in order to edit.');}</script><body onload='myFunction()'>"
     if request.method == 'POST':
+        if request.form['description']:
+            editedSpirit.description = request.form['description']
         if request.form['name']:
             editedSpirit.name = request.form['name']
             flash('Spirit Successfully Edited %s' % editedSpirit.name)
             return redirect(url_for('showSpirits'))
     else:
-        return render_template('editSpirit.html', spirit=editedSpirit)
+        return render_template('editSpirit.html', spirit=editedSpirit, spirits=spirits, recipes=recipes, creator=creator)
 
 
 # Delete a spirit
 @app.route('/spirit/<int:spirit_id>/delete/', methods=['GET', 'POST'])
 @app.route('/spirits/<int:spirit_id>/delete/', methods=['GET', 'POST'])
 def deleteSpirit(spirit_id):
+    spirits = session.query(Spirit).order_by(asc(Spirit.name))
     spiritToDelete = session.query(
         Spirit).filter_by(id=spirit_id).one()
+    creator = getUserInfo(spiritToDelete.user_id)
+    recipes = session.query(Recipe).filter_by(
+        spirit_id=spirit_id).all()
     if 'username' not in login_session:
         return redirect('/login')
     if spiritToDelete.user_id != login_session['user_id']:
@@ -352,7 +363,7 @@ def deleteSpirit(spirit_id):
         session.commit()
         return redirect(url_for('showSpirits', spirit_id=spirit_id))
     else:
-        return render_template('deleteSpirit.html', spirit=spiritToDelete)
+        return render_template('deleteSpirit.html', spirit=spiritToDelete, spirits=spirits, recipes=recipes, creator=creator)
 
 
 # View recipes using a particular spirit
@@ -361,26 +372,30 @@ def deleteSpirit(spirit_id):
 @app.route('/spirit/<int:spirit_id>/cocktails/')
 @app.route('/spirits/<int:spirit_id>/cocktails/')
 def showRecipes(spirit_id):
+    spirits = session.query(Spirit).order_by(asc(Spirit.name))
     spirit = session.query(Spirit).filter_by(id=spirit_id).one()
     creator = getUserInfo(spirit.user_id)
     recipes = session.query(Recipe).filter_by(
         spirit_id=spirit_id).all()
     if 'username' not in login_session or creator.id != login_session['user_id']:
-        return render_template('publicRecipes.html', recipes=recipes, spirit=spirit, creator=creator)
+        return render_template('publicRecipes.html', spirits=spirits, recipes=recipes, spirit=spirit, creator=creator)
     else:
-        return render_template('recipeList.html', recipes=recipes, spirit=spirit, creator=creator)
+        return render_template('recipeList.html', spirits=spirits, recipes=recipes, spirit=spirit, creator=creator)
 
 # Show individual recipe
 @app.route('/spirit/<int:spirit_id>/cocktails/<int:recipe_id>/', methods=['GET', 'POST'])
 @app.route('/spirits/<int:spirit_id>/cocktails/<int:recipe_id>/', methods=['GET', 'POST'])
 def showSelectedRecipe(spirit_id, recipe_id):
-    if 'username' not in login_session:
-        return redirect('/login')
+    spirits = session.query(Spirit).order_by(asc(Spirit.name))
+    recipes = session.query(Recipe).filter_by(
+        spirit_id=spirit_id).all()
     showSelectedRecipe = session.query(Recipe).filter_by(id=recipe_id).one()
     spirit = session.query(Spirit).filter_by(id=spirit_id).one()
+    if 'username' not in login_session:
+        return render_template('publicShowSelectedRecipe.html', spirit=spirit, spirit_id=spirit_id, recipe_id=recipe_id, recipe=showSelectedRecipe, recipes=recipes, spirits=spirits)
     if login_session['user_id'] != spirit.user_id:
         return "<script>function myFunction() {alert('You are not authorized to add menu items to this recipe. Please create your own spirit or recipe in order to add items.');}</script><body onload='myFunction()'>"
-    return render_template('showSelectedRecipe.html', spirit_id=spirit_id, recipe_id=recipe_id, recipe=showSelectedRecipe)
+    return render_template('showSelectedRecipe.html', spirit=spirit, spirit_id=spirit_id, recipe_id=recipe_id, recipe=showSelectedRecipe, recipes=recipes, spirits=spirits)
 
 # Create a new recipe
 @app.route('/spirit/<int:spirit_id>/cocktails/new/', methods=['GET', 'POST'])
@@ -388,7 +403,10 @@ def showSelectedRecipe(spirit_id, recipe_id):
 def newRecipe(spirit_id):
     if 'username' not in login_session:
         return redirect('/login')
+    spirits = session.query(Spirit).order_by(asc(Spirit.name))
     spirit = session.query(Spirit).filter_by(id=spirit_id).one()
+    recipes = session.query(Recipe).filter_by(
+        spirit_id=spirit_id).all()
     if login_session['user_id'] != spirit.user_id:
         return "<script>function myFunction() {alert('You are not authorized to add menu items to this spirit. Please create your own spirit or recipe in order to add items.');}</script><body onload='myFunction()'>"
     if request.method == 'POST':
@@ -402,9 +420,9 @@ def newRecipe(spirit_id):
         session.add(newRecipe)
         session.commit()
         flash('New Menu %s Item Successfully Created' % (newRecipe.name))
-        return redirect(url_for('showRecipes', spirit_id=spirit_id))
+        return redirect(url_for('showRecipes', spirits=spirits, recipes=recipes, spirit=spirit, spirit_id=spirit_id))
     else:
-        return render_template('newRecipe.html', spirit=spirit)
+        return render_template('newRecipe.html', spirits=spirits, recipes=recipes, spirit=spirit)
 
 
 # Edit a recipe
@@ -415,6 +433,9 @@ def newRecipe(spirit_id):
 def editRecipe(spirit_id, recipe_id):
     if 'username' not in login_session:
         return redirect('/login')
+    spirits = session.query(Spirit).order_by(asc(Spirit.name))
+    recipes = session.query(Recipe).filter_by(
+        spirit_id=spirit_id).all()
     editedRecipe = session.query(Recipe).filter_by(id=recipe_id).one()
     spirit = session.query(Spirit).filter_by(id=spirit_id).one()
     if login_session['user_id'] != spirit.user_id:
@@ -433,7 +454,7 @@ def editRecipe(spirit_id, recipe_id):
         flash('Recipe Successfully Edited')
         return redirect(url_for('showRecipes', spirit_id=spirit_id))
     else:
-        return render_template('editRecipe.html', spirit_id=spirit_id, recipe_id=recipe_id, recipe=editedRecipe)
+        return render_template('editRecipe.html', spirit_id=spirit_id, recipe_id=recipe_id, recipe=editedRecipe, spirits=spirits, spirit=spirit, recipes=recipes)
 
 
 # Edit a recipe
@@ -445,7 +466,10 @@ def deleteRecipe(spirit_id, recipe_id):
     if 'username' not in login_session:
         return redirect('/login')
     deleteRecipe = session.query(Recipe).filter_by(id=recipe_id).one()
+    spirits = session.query(Spirit).order_by(asc(Spirit.name))
     spirit = session.query(Spirit).filter_by(id=spirit_id).one()
+    recipes = session.query(Recipe).filter_by(
+        spirit_id=spirit_id).all()
     if login_session['user_id'] != spirit.user_id:
         return "<script>function myFunction() {alert('You are not authorized to edit menu items to this recipe. Please create your own spirit or recipe in order to edit items.');}</script><body onload='myFunction()'>"
     if request.method == 'POST':
@@ -454,7 +478,7 @@ def deleteRecipe(spirit_id, recipe_id):
         flash('%s Recipe Successfully Deleted' % deleteRecipe.name)
         return redirect(url_for('showRecipes', spirit_id=spirit_id))
     else:
-        return render_template('deleteRecipe.html', spirit_id=spirit_id, recipe_id=recipe_id, recipe=deleteRecipe)
+        return render_template('deleteRecipe.html', recipes=recipes, spirits=spirits, spirit=spirit, spirit_id=spirit_id, recipe_id=recipe_id, recipe=deleteRecipe)
 
 # Disconnect based on provider
 @app.route('/disconnect')
@@ -467,12 +491,24 @@ def disconnect():
             del login_session['username']
             del login_session['email']
             del login_session['picture']
+            del login_session['access_token']
         del login_session['user_id']
         del login_session['provider']
         flash("You have successfully been logged out.")
         return redirect(url_for('showSpirits'))
-    else:
-        flash("You were not logged in")
+    if 'username' in login_session:
+        del login_session['username']
+    if 'email' in login_session:
+        del login_session['email']
+    if 'picture' in login_session:
+        del login_session['picture']
+    if 'user_id' in login_session:
+        del login_session['user_id']
+    if 'access_token' in login_session:
+        del login_session['access_token']
+    if 'gplus_id' in login_session:    
+        del login_session['gplus_id']
+        """flash("You were not logged in")"""
         return redirect(url_for('showSpirits'))
 
 
