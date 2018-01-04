@@ -142,7 +142,7 @@ def gdisconnect():
     print 'In gdisconnect access token is %s', access_token
     print 'User name is: '
     print login_session['username']
-    url = """'https://accounts.google.com/o/oauth2/
+    url = """https://accounts.google.com/o/oauth2/
           revoke?token=%s""" % login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
@@ -329,14 +329,14 @@ def newSpirit():
 @app.route('/spirit/<int:spirit_id>/edit/', methods=['GET', 'POST'])
 @app.route('/spirits/<int:spirit_id>/edit/', methods=['GET', 'POST'])
 def editSpirit(spirit_id):
+    if 'username' not in login_session:
+        return redirect('/login')
     editedSpirit = session.query(
         Spirit).filter_by(id=spirit_id).one()
     spirits = session.query(Spirit).order_by(asc(Spirit.name))
     creator = getUserInfo(editedSpirit.user_id)
     recipes = session.query(Recipe).filter_by(
         spirit_id=spirit_id).all()
-    if 'username' not in login_session:
-        return redirect('/login')
     if editedSpirit.user_id != login_session['user_id']:
         return """<script>function myFunction()
             {alert('You are not authorized to edit this spirit. Please cre
@@ -361,14 +361,14 @@ def editSpirit(spirit_id):
 @app.route('/spirit/<int:spirit_id>/delete/', methods=['GET', 'POST'])
 @app.route('/spirits/<int:spirit_id>/delete/', methods=['GET', 'POST'])
 def deleteSpirit(spirit_id):
+    if 'username' not in login_session:
+        return redirect('/login')
     spirits = session.query(Spirit).order_by(asc(Spirit.name))
     spiritToDelete = session.query(
         Spirit).filter_by(id=spirit_id).one()
     creator = getUserInfo(spiritToDelete.user_id)
     recipes = session.query(Recipe).filter_by(
         spirit_id=spirit_id).all()
-    if 'username' not in login_session:
-        return redirect('/login')
     if spiritToDelete.user_id != login_session['user_id']:
         return """<script>function myFunction()
         {alert('You are not authorized to delete this spirit. Please
