@@ -1,10 +1,16 @@
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-from flask import Flask, render_template, request, redirect, jsonify, url_for, flash, make_response
+from flask import (Flask,
+                   render_template,
+                   request,
+                   redirect,
+                   jsonify,
+                   url_for,
+                   flash,
+                   make_response)
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
-from models import Base, Spirit, Recipe, User 
+from models import Base, Spirit, Recipe, User
 from flask import session as login_session
-import random, string, httplib2, json, requests, cgi
+import random, string, httplib2, json, requests
 from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
 
 
@@ -28,7 +34,6 @@ def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
     login_session['state'] = state
-#    return "The current session state is %s or %s" % (login_session['state'], request.args.get('state'))
     return render_template('login.html', STATE=state)
 
 
@@ -85,8 +90,8 @@ def gconnect():
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
         login_session['access_token'] = credentials.access_token
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(json.dumps(
+            'Current user is already connected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -117,7 +122,8 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;'
+    output += '-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
     print "done!"
     return output
@@ -129,13 +135,15 @@ def gdisconnect():
     access_token = login_session.get('access_token')
     if access_token is None:
         print 'Access Token is None'
-        response = make_response(json.dumps('Current user not connected.'), 401)
+        response = make_response(
+            json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     print 'In gdisconnect access token is %s', access_token
     print 'User name is: '
     print login_session['username']
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    url = """'https://accounts.google.com/o/oauth2/
+          revoke?token=%s""" % login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     print 'result is '
@@ -150,7 +158,8 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     else:
-        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+        response = make_response(
+            json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -165,28 +174,31 @@ def fbconnect():
     print "access token received %s " % access_token
 
 
-    app_id = json.loads(open('fb_client_secrets.json', 'r').read())[
-        'web']['app_id']
+    app_id = json.loads(open(
+        'fb_client_secrets.json', 'r').read())['web']['app_id']
     app_secret = json.loads(
         open('fb_client_secrets.json', 'r').read())['web']['app_secret']
-    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
-        app_id, app_secret, access_token)
+    url = """https://graph.facebook.com/oauth/access_token?
+          grant_type=fb_exchange_token&client_id=%s
+          &client_secret=%s
+          &fb_exchange_token=%s""" % (app_id, app_secret, access_token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
 
 
-    # Use token to get user info from API
+# Use token to get user info from API
     userinfo_url = "https://graph.facebook.com/v2.8/me"
     '''
-        Due to the formatting for the result from the server token exchange we have to
-        split the token first on commas and select the first index which gives us the key : value
-        for the server access token then we split it on colons to pull out the actual token value
-        and replace the remaining quotes with nothing so that it can be used directly in the graph
-        api calls
+Due to the formatting for the result from the server token exchange we have to
+split the token first on commas and select the first index which gives us the
+key : value for the server access token then we split it on colons to pull out
+the actual token value and replace the remaining quotes with nothing so that
+it can be used directly in the graph api calls
     '''
     token = result.split(',')[0].split(':')[1].replace('"', '')
 
-    url = 'https://graph.facebook.com/v2.8/me?access_token=%s&fields=name,id,email' % token
+    url = """https://graph.facebook.com/v2.8/me
+            ?access_token=%s&fields=name,id,email""" % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     # print "url sent for API access:%s"% url
@@ -201,7 +213,8 @@ def fbconnect():
     login_session['access_token'] = token
 
     # Get user picture
-    url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token
+    url = """https://graph.facebook.com/v2.8/me/picture?access_token=%s
+            &redirect=0&height=200&width=200""" % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
@@ -221,7 +234,8 @@ def fbconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;'
+    output += '-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
 
     flash("Now logged in as %s" % login_session['username'])
     return output
@@ -232,23 +246,17 @@ def fbdisconnect():
     facebook_id = login_session['facebook_id']
     # The access token must me included to successfully logout
     access_token = login_session.get('access_token')
-    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id,access_token)
+    url = """https://graph.facebook.com/%s
+            /permissions?access_token=%s""" % (facebook_id, access_token)
     h = httplib2.Http()
-    result = h.request(url, 'DELETE')[1]
+    h.request(url, 'DELETE')[1]
     return "you have been logged out"
-
-def showRecipes(spirit_id):
-    spirit = session.query(Spirit).filter_by(id=spirit_id).one()
-#    creator = getUserInfo(spirit.user_id)
-    recipes = session.query(Recipe).filter_by(
-        spirit_id=spirit_id).all()
 
 
 # NEED TO UPDATE
 # JSON APIs to view Spirit and Cocktail Information
 @app.route('/spirit/<int:spirit_id>/recipes/JSON')
 def showRecipesJSON(spirit_id):
-    spirit = session.query(Spirit).filter_by(id=spirit_id).one()
     recipes = session.query(Recipe).filter_by(
         spirit_id=spirit_id).all()
     return jsonify(Recipes=[recipe.serialize for recipe in recipes])
@@ -282,11 +290,9 @@ def getUserInfo(user_id):
 
 
 def getUserID(email):
-    try:
-        user = session.query(User).filter_by(email=email).one()
-        return user.id
-    except:
-        return None
+    user = session.query(User).filter_by(email=email).one()
+    return user.id
+
 
 # Show all spirits
 @app.route('/')
@@ -308,8 +314,8 @@ def newSpirit():
     spirits = session.query(Spirit).order_by(asc(Spirit.name))
     if request.method == 'POST':
         newSpirit = Spirit(
-            name= request.form['name'], 
-            description = request.form['description'],
+            name=request.form['name'],
+            description=request.form['description'],
             user_id=login_session['user_id'])
         session.add(newSpirit)
         flash('New Spirit %s Successfully Added' % newSpirit.name)
@@ -317,6 +323,7 @@ def newSpirit():
         return redirect(url_for('showSpirits', spirits=spirits))
     else:
         return render_template('newSpirit.html', spirits=spirits)
+
 
 # Edit a spirit
 @app.route('/spirit/<int:spirit_id>/edit/', methods=['GET', 'POST'])
@@ -331,7 +338,10 @@ def editSpirit(spirit_id):
     if 'username' not in login_session:
         return redirect('/login')
     if editedSpirit.user_id != login_session['user_id']:
-        return "<script>function myFunction() {alert('You are not authorized to edit this spirit. Please create your own spirit in order to edit.');}</script><body onload='myFunction()'>"
+        return """<script>function myFunction()
+            {alert('You are not authorized to edit this spirit. Please cre
+            ate your own spirit in order to edit.');}</script><body onload=
+            'myFunction()'>"""
     if request.method == 'POST':
         if request.form['description']:
             editedSpirit.description = request.form['description']
@@ -340,7 +350,11 @@ def editSpirit(spirit_id):
             flash('Spirit Successfully Edited %s' % editedSpirit.name)
             return redirect(url_for('showSpirits'))
     else:
-        return render_template('editSpirit.html', spirit=editedSpirit, spirits=spirits, recipes=recipes, creator=creator)
+        return render_template('editSpirit.html',
+                               spirit=editedSpirit,
+                               spirits=spirits,
+                               recipes=recipes,
+                               creator=creator)
 
 
 # Delete a spirit
@@ -356,14 +370,21 @@ def deleteSpirit(spirit_id):
     if 'username' not in login_session:
         return redirect('/login')
     if spiritToDelete.user_id != login_session['user_id']:
-        return "<script>function myFunction() {alert('You are not authorized to delete this spirit. Please create your own spirit in order to delete.');}</script><body onload='myFunction()'>"
+        return """<script>function myFunction()
+        {alert('You are not authorized to delete this spirit. Please
+         create your own spirit in order to delete.');}</script>
+        <body onload='myFunction()'>"""
     if request.method == 'POST':
         session.delete(spiritToDelete)
         flash('%s Successfully Deleted' % spiritToDelete.name)
         session.commit()
         return redirect(url_for('showSpirits', spirit_id=spirit_id))
     else:
-        return render_template('deleteSpirit.html', spirit=spiritToDelete, spirits=spirits, recipes=recipes, creator=creator)
+        return render_template('deleteSpirit.html',
+                               spirit=spiritToDelete,
+                               spirits=spirits,
+                               recipes=recipes,
+                               creator=creator)
 
 
 # View recipes using a particular spirit
@@ -377,14 +398,26 @@ def showRecipes(spirit_id):
     creator = getUserInfo(spirit.user_id)
     recipes = session.query(Recipe).filter_by(
         spirit_id=spirit_id).all()
-    if 'username' not in login_session or creator.id != login_session['user_id']:
-        return render_template('publicRecipes.html', spirits=spirits, recipes=recipes, spirit=spirit, creator=creator)
+    if 'username' not in login_session or (creator.id !=
+                                           login_session['user_id']):
+        return render_template('publicRecipes.html',
+                               spirits=spirits,
+                               recipes=recipes,
+                               spirit=spirit,
+                               creator=creator)
     else:
-        return render_template('recipeList.html', spirits=spirits, recipes=recipes, spirit=spirit, creator=creator)
+        return render_template('recipeList.html',
+                               spirits=spirits,
+                               recipes=recipes,
+                               spirit=spirit,
+                               creator=creator)
+
 
 # Show individual recipe
-@app.route('/spirit/<int:spirit_id>/cocktails/<int:recipe_id>/', methods=['GET', 'POST'])
-@app.route('/spirits/<int:spirit_id>/cocktails/<int:recipe_id>/', methods=['GET', 'POST'])
+@app.route('/spirit/<int:spirit_id>/cocktails/<int:recipe_id>/',
+           methods=['GET', 'POST'])
+@app.route('/spirits/<int:spirit_id>/cocktails/<int:recipe_id>/',
+           methods=['GET', 'POST'])
 def showSelectedRecipe(spirit_id, recipe_id):
     spirits = session.query(Spirit).order_by(asc(Spirit.name))
     recipes = session.query(Recipe).filter_by(
@@ -392,10 +425,26 @@ def showSelectedRecipe(spirit_id, recipe_id):
     showSelectedRecipe = session.query(Recipe).filter_by(id=recipe_id).one()
     spirit = session.query(Spirit).filter_by(id=spirit_id).one()
     if 'username' not in login_session:
-        return render_template('publicShowSelectedRecipe.html', spirit=spirit, spirit_id=spirit_id, recipe_id=recipe_id, recipe=showSelectedRecipe, recipes=recipes, spirits=spirits)
+        return render_template('publicShowSelectedRecipe.html',
+                               spirit=spirit,
+                               spirit_id=spirit_id,
+                               recipe_id=recipe_id,
+                               recipe=showSelectedRecipe,
+                               recipes=recipes,
+                               spirits=spirits)
     if login_session['user_id'] != spirit.user_id:
-        return "<script>function myFunction() {alert('You are not authorized to add menu items to this recipe. Please create your own spirit or recipe in order to add items.');}</script><body onload='myFunction()'>"
-    return render_template('showSelectedRecipe.html', spirit=spirit, spirit_id=spirit_id, recipe_id=recipe_id, recipe=showSelectedRecipe, recipes=recipes, spirits=spirits)
+        return """<script>function myFunction()
+                  {alert('You are not authorized to add menu items to this
+                   recipe. Please create your own spirit or recipe in order
+                   to add items.');}</script><body onload='myFunction()'>"""
+    return render_template('showSelectedRecipe.html',
+                           spirit=spirit,
+                           spirit_id=spirit_id,
+                           recipe_id=recipe_id,
+                           recipe=showSelectedRecipe,
+                           recipes=recipes,
+                           spirits=spirits)
+
 
 # Create a new recipe
 @app.route('/spirit/<int:spirit_id>/cocktails/new/', methods=['GET', 'POST'])
@@ -408,28 +457,42 @@ def newRecipe(spirit_id):
     recipes = session.query(Recipe).filter_by(
         spirit_id=spirit_id).all()
     if login_session['user_id'] != spirit.user_id:
-        return "<script>function myFunction() {alert('You are not authorized to add menu items to this spirit. Please create your own spirit or recipe in order to add items.');}</script><body onload='myFunction()'>"
+        return """<script>function myFunction()
+                  {alert('You are not authorized to add menu items to this
+                   spirit. Please create your own spirit or recipe in order to
+                   add items.');}</script><body onload='myFunction()'>"""
     if request.method == 'POST':
         newRecipe = Recipe(
-            name=request.form['name'], 
-            description=request.form['description'], 
-            ingredients=request.form['ingredients'], 
-            instructions=request.form['instructions'], 
-            spirit_id=spirit_id, 
+            name=request.form['name'],
+            description=request.form['description'],
+            ingredients=request.form['ingredients'],
+            instructions=request.form['instructions'],
+            spirit_id=spirit_id,
             user_id=spirit.user_id)
         session.add(newRecipe)
         session.commit()
         flash('New Menu %s Item Successfully Created' % (newRecipe.name))
-        return redirect(url_for('showRecipes', spirits=spirits, recipes=recipes, spirit=spirit, spirit_id=spirit_id))
+        return redirect(url_for('showRecipes',
+                                spirits=spirits,
+                                recipes=recipes,
+                                spirit=spirit,
+                                spirit_id=spirit_id))
     else:
-        return render_template('newRecipe.html', spirits=spirits, recipes=recipes, spirit=spirit)
+        return render_template('newRecipe.html',
+                               spirits=spirits,
+                               recipes=recipes,
+                               spirit=spirit)
 
 
 # Edit a recipe
-@app.route('/spirit/<int:spirit_id>/cocktail/<int:recipe_id>/edit', methods=['GET', 'POST'])
-@app.route('/spirit/<int:spirit_id>/cocktails/<int:recipe_id>/edit', methods=['GET', 'POST'])
-@app.route('/spirits/<int:spirit_id>/cocktail/<int:recipe_id>/edit', methods=['GET', 'POST'])
-@app.route('/spirits/<int:spirit_id>/cocktails/<int:recipe_id>/edit', methods=['GET', 'POST'])
+@app.route('/spirit/<int:spirit_id>/cocktail/<int:recipe_id>/edit',
+           methods=['GET', 'POST'])
+@app.route('/spirit/<int:spirit_id>/cocktails/<int:recipe_id>/edit',
+           methods=['GET', 'POST'])
+@app.route('/spirits/<int:spirit_id>/cocktail/<int:recipe_id>/edit',
+           methods=['GET', 'POST'])
+@app.route('/spirits/<int:spirit_id>/cocktails/<int:recipe_id>/edit',
+           methods=['GET', 'POST'])
 def editRecipe(spirit_id, recipe_id):
     if 'username' not in login_session:
         return redirect('/login')
@@ -439,7 +502,10 @@ def editRecipe(spirit_id, recipe_id):
     editedRecipe = session.query(Recipe).filter_by(id=recipe_id).one()
     spirit = session.query(Spirit).filter_by(id=spirit_id).one()
     if login_session['user_id'] != spirit.user_id:
-        return "<script>function myFunction() {alert('You are not authorized to edit menu items to this recipe. Please create your own spirit or recipe in order to edit items.');}</script><body onload='myFunction()'>"
+        return """<script>function myFunction()
+               {alert('You are not authorized to edit menu items to this
+                recipe. Please create your own spirit or recipe in order to
+                 edit items.');}</script><body onload='myFunction()'>"""
     if request.method == 'POST':
         if request.form['name']:
             editedRecipe.name = request.form['name']
@@ -454,14 +520,24 @@ def editRecipe(spirit_id, recipe_id):
         flash('Recipe Successfully Edited')
         return redirect(url_for('showRecipes', spirit_id=spirit_id))
     else:
-        return render_template('editRecipe.html', spirit_id=spirit_id, recipe_id=recipe_id, recipe=editedRecipe, spirits=spirits, spirit=spirit, recipes=recipes)
+        return render_template('editRecipe.html',
+                               spirit_id=spirit_id,
+                               recipe_id=recipe_id,
+                               recipe=editedRecipe,
+                               spirits=spirits,
+                               spirit=spirit,
+                               recipes=recipes)
 
 
 # Edit a recipe
-@app.route('/spirit/<int:spirit_id>/cocktail/<int:recipe_id>/delete', methods=['GET', 'POST'])
-@app.route('/spirit/<int:spirit_id>/cocktails/<int:recipe_id>/delete', methods=['GET', 'POST'])
-@app.route('/spirits/<int:spirit_id>/cocktail/<int:recipe_id>/delete', methods=['GET', 'POST'])
-@app.route('/spirits/<int:spirit_id>/cocktails/<int:recipe_id>/delete', methods=['GET', 'POST'])
+@app.route('/spirit/<int:spirit_id>/cocktail/<int:recipe_id>/delete',
+           methods=['GET', 'POST'])
+@app.route('/spirit/<int:spirit_id>/cocktails/<int:recipe_id>/delete',
+           methods=['GET', 'POST'])
+@app.route('/spirits/<int:spirit_id>/cocktail/<int:recipe_id>/delete',
+           methods=['GET', 'POST'])
+@app.route('/spirits/<int:spirit_id>/cocktails/<int:recipe_id>/delete',
+           methods=['GET', 'POST'])
 def deleteRecipe(spirit_id, recipe_id):
     if 'username' not in login_session:
         return redirect('/login')
@@ -471,14 +547,24 @@ def deleteRecipe(spirit_id, recipe_id):
     recipes = session.query(Recipe).filter_by(
         spirit_id=spirit_id).all()
     if login_session['user_id'] != spirit.user_id:
-        return "<script>function myFunction() {alert('You are not authorized to edit menu items to this recipe. Please create your own spirit or recipe in order to edit items.');}</script><body onload='myFunction()'>"
+        return """<script>function myFunction()
+               {alert('You are not authorized to edit menu items to this
+                recipe. Please create your own spirit or recipe in order to
+                 edit items.');}</script><body onload='myFunction()'>"""
     if request.method == 'POST':
         session.delete(deleteRecipe)
         session.commit()
         flash('%s Recipe Successfully Deleted' % deleteRecipe.name)
         return redirect(url_for('showRecipes', spirit_id=spirit_id))
     else:
-        return render_template('deleteRecipe.html', recipes=recipes, spirits=spirits, spirit=spirit, spirit_id=spirit_id, recipe_id=recipe_id, recipe=deleteRecipe)
+        return render_template('deleteRecipe.html',
+                               recipes=recipes,
+                               spirits=spirits,
+                               spirit=spirit,
+                               spirit_id=spirit_id,
+                               recipe_id=recipe_id,
+                               recipe=deleteRecipe)
+
 
 # Disconnect based on provider
 @app.route('/disconnect')
@@ -506,7 +592,7 @@ def disconnect():
         del login_session['user_id']
     if 'access_token' in login_session:
         del login_session['access_token']
-    if 'gplus_id' in login_session:    
+    if 'gplus_id' in login_session:
         del login_session['gplus_id']
         """flash("You were not logged in")"""
         return redirect(url_for('showSpirits'))
