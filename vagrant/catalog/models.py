@@ -1,9 +1,14 @@
+import os
+import sys
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
 from passlib.apps import custom_app_context as pwd_context
 Base = declarative_base()
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DATABASE_PATH = os.path.join(BASE_DIR, 'drinkcatalog.db')
 
 
 class User(Base):
@@ -71,7 +76,7 @@ class Recipe(Base):
         }
 
 
-engine = create_engine('sqlite:///drinkcatalog.db')
-
+engine = create_engine(
+    'sqlite:///' + DATABASE_PATH, connect_args={'check_same_thread': False})
 
 Base.metadata.create_all(engine)

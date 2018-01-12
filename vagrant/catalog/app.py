@@ -10,19 +10,28 @@ from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
 from models import Base, Spirit, Recipe, User
 from flask import session as login_session
-import random, string, httplib2, json, requests
+import random, string, httplib2, json, requests, os, sys
 from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
 
 
 app = Flask(__name__)
 
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DATABASE_PATH = os.path.join(BASE_DIR, 'drinkcatalog.db')
+CLIENT_SECRETS_JSON_PATH = os.path.join(BASE_DIR, 'client_secrets.json')
+
+
 CLIENT_ID = json.loads(
-    open('client_secrets.json', 'r').read())['web']['client_id']
+    open(CLIENT_SECRETS_JSON_PATH, 'r').read())['web']['client_id']
 APPLICATION_NAME = "Bartender at Home Application"
 
 # Connect to Database and create database session
-engine = create_engine('sqlite:///drinkcatalog.db')
+engine = create_engine(
+                        'sqlite:///' +
+                        DATABASE_PATH,
+                        connect_args={'check_same_thread': False})
 Base.metadata.bind = engine
+
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
