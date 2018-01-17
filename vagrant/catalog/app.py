@@ -6,6 +6,7 @@ from flask import (Flask,
                    url_for,
                    flash,
                    make_response)
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
 from models import Base, Spirit, Recipe, User
@@ -26,10 +27,7 @@ CLIENT_ID = json.loads(
 APPLICATION_NAME = "Bartender at Home Application"
 
 # Connect to Database and create database session
-engine = create_engine(
-                        'sqlite:///' +
-                        DATABASE_PATH,
-                        connect_args={'check_same_thread': False})
+engine = create_engine('postgresql://cfio:drinkDB@localhost/drinkcatalogdb')
 Base.metadata.bind = engine
 
 

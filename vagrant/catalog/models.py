@@ -1,5 +1,7 @@
 import os
 import sys
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -76,7 +78,6 @@ class Recipe(Base):
         }
 
 
-engine = create_engine(
-    'sqlite:///' + DATABASE_PATH, connect_args={'check_same_thread': False})
+engine = create_engine('postgresql://cfio:drinkDB@localhost/drinkcatalogdb')
 
 Base.metadata.create_all(engine)
